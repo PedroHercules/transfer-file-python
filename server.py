@@ -1,47 +1,34 @@
-import socket
-import tqdm
-import os
-import threading
+from flask import Flask, flash, request, redirect, url_for
+from werkzeug.utils import secure_filename
+from cassandra.cluster import Cluster
+from cassandra.auth import PlainTextAuthProvider
+import codecs
+import uuid
 
-# server IP address
-SERVER_HOST = "localhost"
-SERVER_PORT = 3333
-BUFFER_SIZE = 4096
-SEPARATOR = ";"
+app = Flask(__name__)
 
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+auth_provider = PlainTextAuthProvider(username='cassandra', password='cassandra')
 
-server_socket.bind((SERVER_HOST, SERVER_PORT))
+cluster = Cluster(['127.0.0.1'], port=9042, auth_provider=auth_provider)
+session = cluster.connect('store')
 
-server_socket.listen(5)
+@app.route('/files', methods = ['POST'])
+def upload_file():
+  file = request.files['file']
+  file_read = file.read()
+  file64_encoded = codecs.encode(file_read, 'hex_codec')
 
-print(f"[*] Listening as {SERVER_HOST}:{SERVER_PORT}")
+  session.execute('USE store')
 
-def receiveClientRequest(server_socket):
-  client_socket, addr = server_socket.accept()
-  print(f"[+] {addr} is connected")
+  id = uuid.uuid1()
+  print(id)
 
-  received = client_socket.recv(BUFFER_SIZE).decode()
-  filename, filesize = received.split(SEPARATOR)
+  strCQL = "INSERT INTO server_file (id, file) VALUES (?,?)"
+  pStatement = session.prepare(strCQL)
+  session.execute(pStatement,[id,file64_encoded])
 
-  filename = os.path.basename(filename)
-  filesize = int(filesize)
+  return 'File uploaded successfully'
 
-  with open(filename, "wb") as f:
-    while True:
-      # read 1024 bytes from the socket (receive)
-          bytes_read = client_socket.recv(BUFFER_SIZE)
-          if not bytes_read:    
-              # nothing is received
-              # file transmitting is done
-              break
-          # write to the file the bytes we just received
-          f.write(bytes_read)
-          # update the progress bar
-          progress.update(len(bytes_read))
 
-  client_socket.close()
-
-receiveClientRequest(server_socket)
-server_socket.close()
-
+if __name__ == '__main__':
+  app.run(debug = True)
