@@ -15,8 +15,15 @@ for i in range(n_file):
     f.write(b'0' * num_chars)
   filesnames.append(filename)
 
+time_res = []
+
 for filename in filesnames:
   files = {"file": (filename, open(filename, "rb"))}
+  t0 = time.time()
   res = requests.post("http://localhost:5000/files", files=files)
+  t1 = time.time()
+  time_res.append(t1 - t0)
   print(res.content)
+  print("Tempo: " + t1 - t0)
   time.sleep(send_rate)
+print("Tempo de resposta"+time_res.mean())
