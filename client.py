@@ -1,11 +1,16 @@
 import time
 import requests
 import statistics
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
-n_file = int(input('Informe a numero de arquivos\n'))
-file_size = int(input('Informe o tamanho dos arquivos em MB\n'))
-send_rate = int(input('Informe a taxa de envio em segundos\n'))
+server_addr = os.getenv('IP_SERVER')
+
+n_file = int(os.getenv('N_FILES'))
+file_size = int(os.getenv('SIZE_FILES'))
+send_rate = int(os.getenv('RATE'))
 
 filesnames = []
 
@@ -21,7 +26,7 @@ time_res = []
 for filename in filesnames:
   files = {"file": (filename, open(filename, "rb"))}
   t0 = time.time()
-  res = requests.post("http://localhost:5000/files", files=files)
+  res = requests.post(f"{server_addr}/files", files=files)
   t1 = time.time()
   time_res.append(t1 - t0)
   print(res.content)
