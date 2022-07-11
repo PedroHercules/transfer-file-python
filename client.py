@@ -1,5 +1,6 @@
 import time
 import requests
+import statistics
 
 
 n_file = int(input('Informe a numero de arquivos\n'))
@@ -24,6 +25,6 @@ for filename in filesnames:
   t1 = time.time()
   time_res.append(t1 - t0)
   print(res.content)
-  print("Tempo: " + t1 - t0)
+  print(f"Tempo: {t1 - t0}")
   time.sleep(send_rate)
-print("Tempo de resposta"+time_res.mean())
+print(f"Tempo médio de resposta: {statistics.mean(time_res)}")
