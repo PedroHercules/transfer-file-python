@@ -2,6 +2,7 @@ import time
 import requests
 import statistics
 from dotenv import load_dotenv
+import pandas as pd
 import os
 
 load_dotenv()
@@ -32,4 +33,7 @@ for filename in filesnames:
   print(res.content)
   print(f"Tempo: {t1 - t0}")
   time.sleep(send_rate)
+
+df = pd.DataFrame(time_res, columns=['tempo'])
+df.to_csv(f'rate_{send_rate}_size_{file_size}.csv')
 print(f"Tempo médio de resposta: {statistics.mean(time_res)}")
